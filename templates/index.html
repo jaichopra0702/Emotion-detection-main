@@ -5,16 +5,157 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Live Emotion Detector</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <style>
+    :root {
+      --primary: #6C63FF;
+      --secondary: #4D44DB;
+      --accent: #FF6584;
+      --dark: #1A1A2E;
+      --light: #F1F1F1;
+      --success: #28C76F;
+      --warning: #FF9F43;
+      --danger: #EA5455;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+      background-size: cover;
+      color: var(--light);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(26, 26, 46, 0.85);
+      z-index: -1;
+    }
+
+    /* Login Button */
+    .login-btn {
+      position: fixed;
+      top: 30px;
+      right: 30px;
+      background: var(--primary);
+      color: white;
+      padding: 12px 28px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
+      z-index: 100;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .login-btn:hover {
+      background: var(--secondary);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(108, 99, 255, 0.6);
+    }
+
+    .login-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* Main Container */
+    .container {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 50px;
+      border-radius: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      width: 90%;
+      max-width: 800px;
+      margin: 40px auto;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transform: scale(0.95);
+      opacity: 0;
+      animation: fadeInUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        transform: translateY(20px) scale(0.95);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Title */
+    .container h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 2.8rem;
+      margin-bottom: 15px;
+      background: linear-gradient(to right, #fff, #c9d6ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 1px;
+    }
+
+    /* Subtitle */
+    .subtitle {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 30px;
+      line-height: 1.6;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Video Container */
     .video-container {
       position: relative;
       display: inline-block;
+      width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+      transform: perspective(1000px) rotateX(0deg);
+      transition: transform 0.5s ease, box-shadow 0.5s ease;
+      margin-bottom: 30px;
+      border: none;
+    }
+
+    .video-container:hover {
+      transform: perspective(1000px) rotateX(5deg);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
     }
 
     #video, #overlay {
       width: 100%;
       height: auto;
-      border-radius: 10px;
+      border-radius: 16px;
+      display: block;
     }
 
     #overlay {
@@ -24,27 +165,186 @@
       pointer-events: none;
     }
 
-    .login-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
+    /* Button Controls */
+    .controls {
+      margin: 25px 0;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
     }
 
+    .start-btn,
+    .stop-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 5px 15px rgba(108, 99, 255, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      min-width: 180px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .start-btn::before,
+    .stop-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: 0.5s;
+    }
+
+    .start-btn:hover::before,
+    .stop-btn:hover::before {
+      left: 100%;
+    }
+
+    .start-btn:hover {
+      background: var(--secondary);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(108, 99, 255, 0.6);
+    }
+
+    .stop-btn {
+      background: var(--danger);
+      box-shadow: 0 5px 15px rgba(234, 84, 85, 0.4);
+    }
+
+    .stop-btn:hover {
+      background: #d63031;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(234, 84, 85, 0.6);
+    }
+
+    /* Emotion Display */
     #emotion-display {
-      margin-top: 20px;
-      font-size: 20px;
+      margin-top: 30px;
+      padding: 20px;
+      font-size: 24px;
       font-weight: bold;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      animation: pulse 2s infinite;
+      transition: all 0.3s ease;
+      min-height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-transform: capitalize;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(108, 99, 255, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 15px rgba(108, 99, 255, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(108, 99, 255, 0);
+      }
+    }
+
+    /* Floating particles */
+    .particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: -1;
+    }
+
+    .particle {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.5);
+      border-radius: 50%;
+      animation: float linear infinite;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-1000px) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    /* Responsive */
+    @media screen and (max-width: 768px) {
+      .container {
+        padding: 30px;
+        width: 95%;
+      }
+
+      .container h1 {
+        font-size: 2.2rem;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+      }
+
+      .controls {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .start-btn,
+      .stop-btn {
+        width: 100%;
+      }
+
+      .login-btn {
+        top: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        font-size: 14px;
+      }
+    }
+
+    /* Loading animation */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-  <button class="login-btn" onclick="handleLogin()">Login</button>
+  <div class="particles" id="particles"></div>
+  
+  <button class="login-btn animate__animated animate__fadeInRight" onclick="handleLogin()">
+    <span>Login</span>
+  </button>
 
-  <div class="container">
+  <div class="container animate__animated animate__fadeIn">
     <h1>Live Facial Emotion Detector</h1>
-    <p class="subtitle">Start your camera and detect emotions in real-time using AI.</p>
+    <p class="subtitle">Experience real-time emotion recognition powered by advanced AI. Simply start your camera and let our system analyze your facial expressions with remarkable accuracy.</p>
 
     <div class="video-container">
       <video id="video" autoplay muted playsinline></video>
@@ -52,39 +352,116 @@
     </div>
 
     <div class="controls">
-      <button class="start-btn" onclick="startCamera()">Start Camera</button>
-      <button class="stop-btn" onclick="stopCamera()">Stop Camera</button>
+      <button class="start-btn animate__animated animate__fadeInLeft" onclick="startCamera()">
+        <span>Start Camera</span>
+      </button>
+      <button class="stop-btn animate__animated animate__fadeInRight" onclick="stopCamera()">
+        <span>Stop Camera</span>
+      </button>
     </div>
 
-    <div id="emotion-display">Awaiting detection...</div>
+    <div id="emotion-display">
+      <span id="emotion-text">Awaiting detection...</span>
+      <div class="loading" id="loading" style="display: none;"></div>
+    </div>
   </div>
+  <div class="user-info" id="user-info" style="display: none;">
+  <span id="username-display"></span>
+  <button onclick="handleLogout()">Logout</button>
+</div>
 
   <script>
     let videoStream;
     let detectionInterval;
 
+    // Create floating particles
+    function createParticles() {
+      const particlesContainer = document.getElementById('particles');
+      const particleCount = window.innerWidth < 768 ? 20 : 50;
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        
+        const size = Math.random() * 5 + 2;
+        const posX = Math.random() * window.innerWidth;
+        const duration = Math.random() * 20 + 10;
+        const delay = Math.random() * 5;
+        
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${posX}px`;
+        particle.style.bottom = `-10px`;
+        particle.style.animationDuration = `${duration}s`;
+        particle.style.animationDelay = `${delay}s`;
+        
+        particlesContainer.appendChild(particle);
+      }
+    }
+
+    window.addEventListener('load', createParticles);
+    window.addEventListener('resize', function() {
+      document.getElementById('particles').innerHTML = '';
+      createParticles();
+    });
+
     async function startCamera() {
       const video = document.getElementById("video");
       const canvas = document.getElementById("overlay");
+      const emotionText = document.getElementById("emotion-text");
+      const loading = document.getElementById("loading");
+
+      emotionText.innerText = "Initializing camera...";
+      loading.style.display = "inline-block";
 
       try {
-        videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        videoStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: "user" 
+          } 
+        });
         video.srcObject = videoStream;
 
         video.onloadedmetadata = () => {
           canvas.width = video.videoWidth;
           canvas.height = video.videoHeight;
+          emotionText.innerText = "Detecting emotions...";
           detectEmotion();
         };
       } catch (error) {
         console.error("Error accessing camera:", error);
+        emotionText.innerText = "Camera access denied. Please enable permissions.";
+        loading.style.display = "none";
       }
     }
+    // Check if user is logged in (you would typically check with your backend)
+function checkAuth() {
+  const user = localStorage.getItem('emotionUser');
+  if (user) {
+    document.getElementById('user-info').style.display = 'flex';
+    document.getElementById('username-display').innerText = JSON.parse(user).name;
+    document.querySelector('.login-btn').style.display = 'none';
+  }
+}
 
+// Handle logout
+function handleLogout() {
+  localStorage.removeItem('emotionUser');
+  window.location.href = 'login.html';
+}
+
+// Call checkAuth when page loads
+window.addEventListener('load', checkAuth);
     function stopCamera() {
+      const emotionText = document.getElementById("emotion-text");
+      const loading = document.getElementById("loading");
+
       if (videoStream) {
         videoStream.getTracks().forEach(track => track.stop());
-        document.getElementById("emotion-display").innerText = "Camera stopped.";
+        emotionText.innerText = "Camera stopped.";
+        loading.style.display = "none";
       }
       if (detectionInterval) clearInterval(detectionInterval);
 
@@ -99,6 +476,10 @@
       const overlayCtx = overlay.getContext("2d");
       const tempCanvas = document.createElement("canvas");
       const tempCtx = tempCanvas.getContext("2d");
+      const emotionText = document.getElementById("emotion-text");
+      const loading = document.getElementById("loading");
+
+      loading.style.display = "inline-block";
 
       detectionInterval = setInterval(async () => {
         tempCanvas.width = video.videoWidth;
@@ -122,25 +503,35 @@
           if (data.box && data.emotion) {
             const [x, y, w, h] = data.box;
 
-            overlayCtx.strokeStyle = "lime";
+            overlayCtx.strokeStyle = "rgba(108, 99, 255, 0.8)";
             overlayCtx.lineWidth = 3;
             overlayCtx.strokeRect(x, y, w, h);
 
-            overlayCtx.fillStyle = "lime";
-            overlayCtx.font = "20px Arial";
+            overlayCtx.fillStyle = "rgba(108, 99, 255, 0.8)";
+            overlayCtx.font = "bold 20px 'Poppins', sans-serif";
             overlayCtx.fillText(data.emotion, x, y - 10);
-          }
 
-          document.getElementById("emotion-display").innerText =
-            data.emotion || data.error;
+            emotionText.innerText = `Detected: ${data.emotion}`;
+          } else if (data.error) {
+            emotionText.innerText = data.error;
+          }
         } catch (err) {
           console.error("Error in emotion detection:", err);
+          emotionText.innerText = "Detection error. Please try again.";
+        } finally {
+          loading.style.display = "none";
         }
       }, 2000);
     }
 
     function handleLogin() {
-      window.location.href = "login.html";
+      // Add button click animation
+      const btn = document.querySelector('.login-btn');
+      btn.classList.add('animate__pulse');
+      setTimeout(() => {
+        btn.classList.remove('animate__pulse');
+        window.location.href = "login.html";
+      }, 300);
     }
   </script>
 </body>
