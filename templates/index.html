@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live Emotion Detector</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .video-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    #video, #overlay {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+
+    .login-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+    #emotion-display {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <button class="login-btn" onclick="handleLogin()">Login</button>
+
+  <div class="container">
+    <h1>Live Facial Emotion Detector</h1>
+    <p class="subtitle">Start your camera and detect emotions in real-time using AI.</p>
+
+    <div class="video-container">
+      <video id="video" autoplay muted playsinline></video>
+      <canvas id="overlay"></canvas>
+    </div>
+
+    <div class="controls">
+      <button class="start-btn" onclick="startCamera()">Start Camera</button>
+      <button class="stop-btn" onclick="stopCamera()">Stop Camera</button>
+    </div>
+
+    <div id="emotion-display">Awaiting detection...</div>
+  </div>
+
+  <script>
+    let videoStream;
+    let detectionInterval;
+
+    async function startCamera() {
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("overlay");
+
+      try {
+        videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = videoStream;
+
+        video.onloadedmetadata = () => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          detectEmotion();
+        };
+      } catch (error) {
+        console.error("Error accessing camera:", error);
+      }
+    }
+
+    function stopCamera() {
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        document.getElementById("emotion-display").innerText = "Camera stopped.";
+      }
+      if (detectionInterval) clearInterval(detectionInterval);
+
+      // Clear canvas
+      const ctx = document.getElementById("overlay").getContext("2d");
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    }
+
+    function detectEmotion() {
+      const video = document.getElementById("video");
+      const overlay = document.getElementById("overlay");
+      const overlayCtx = overlay.getContext("2d");
+      const tempCanvas = document.createElement("canvas");
+      const tempCtx = tempCanvas.getContext("2d");
+
+      detectionInterval = setInterval(async () => {
+        tempCanvas.width = video.videoWidth;
+        tempCanvas.height = video.videoHeight;
+        tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+
+        const imageData = tempCanvas.toDataURL("image/jpeg");
+
+        try {
+          const response = await fetch("/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: imageData })
+          });
+
+          const data = await response.json();
+
+          // Clear overlay
+          overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+
+          if (data.box && data.emotion) {
+            const [x, y, w, h] = data.box;
+
+            overlayCtx.strokeStyle = "lime";
+            overlayCtx.lineWidth = 3;
+            overlayCtx.strokeRect(x, y, w, h);
+
+            overlayCtx.fillStyle = "lime";
+            overlayCtx.font = "20px Arial";
+            overlayCtx.fillText(data.emotion, x, y - 10);
+          }
+
+          document.getElementById("emotion-display").innerText =
+            data.emotion || data.error;
+        } catch (err) {
+          console.error("Error in emotion detection:", err);
+        }
+      }, 2000);
+    }
+
+    function handleLogin() {
+      window.location.href = "login.html";
+    }
+  </script>
+</body>
+</html>
